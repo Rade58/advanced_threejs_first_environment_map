@@ -11,7 +11,13 @@ import GUI from "lil-gui";
 
 // we than add scene.background = environmentMp
 
-// we will then use environment map to light up the model
+// we will then use environment map to light up our torus mesh
+// we do this by applying environment map onto material
+// this is only a solution if we want to do this for single material of single mesh
+
+// but since we want to apply env map on every mterial of our scene
+// we can use scene.environment = environmentMap
+// you will see reflection in the helmet glasses after this
 
 /**
  * @description Debug UI - lil-ui
@@ -60,15 +66,16 @@ if (canvas) {
   // LDR cube texture
   const environmentMap = cubeTextureLoader.load([
     // follow this exact order, because it's not going to work otherwise
-    "/textures/environmentMaps/underpass/px.png",
-    "/textures/environmentMaps/underpass/nx.png",
-    "/textures/environmentMaps/underpass/py.png",
-    "/textures/environmentMaps/underpass/ny.png",
-    "/textures/environmentMaps/underpass/pz.png",
-    "/textures/environmentMaps/underpass/nz.png",
+    "/textures/environmentMaps/alley/px.png",
+    "/textures/environmentMaps/alley/nx.png",
+    "/textures/environmentMaps/alley/py.png",
+    "/textures/environmentMaps/alley/ny.png",
+    "/textures/environmentMaps/alley/pz.png",
+    "/textures/environmentMaps/alley/nz.png",
   ]);
 
   scene.background = environmentMap;
+  scene.environment = environmentMap;
 
   // ------ LIGHTS ---------------------------------------------------
   // -----------------------------------------------------------------
@@ -97,6 +104,11 @@ if (canvas) {
   );
   torusKnot.position.x = -4;
   torusKnot.position.y = 4;
+
+  // applying environment map onto material of our torusknot mesh
+  // we already used scene.environment = environmentMap   so we don't need this
+  // torusKnot.material.envMap = environmentMap;
+
   scene.add(torusKnot);
 
   // -----------------------------------------------------------------
