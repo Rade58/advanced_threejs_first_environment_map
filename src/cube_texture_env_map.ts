@@ -5,6 +5,14 @@ import GUI from "lil-gui";
 // import gsap from "gsap";
 // import CANNON from "cannon";
 
+// we download environmentMap from https://polyhaven.com/   in hdr format
+// and we use this tool to get png we can attach to cube walls
+// we will have 6 images to use
+
+// we than add scene.background = environmentMp
+
+// we will then use environment map to light up the model
+
 /**
  * @description Debug UI - lil-ui
  */
@@ -32,6 +40,36 @@ const canvas: HTMLCanvasElement | null = document.querySelector("canvas.webgl");
 if (canvas) {
   const scene = new THREE.Scene();
 
+  const gltfLoader = new GLTFLoader();
+
+  gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
+    console.log("model loaded");
+    console.log({ gltf });
+    gltf.scene.scale.setScalar(10);
+
+    scene.add(gltf.scene);
+  });
+
+  // cube textures
+
+  const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+  /**
+   * Environment Map
+   */
+  // LDR cube texture
+  const environmentMap = cubeTextureLoader.load([
+    // follow this exact order, because it's not going to work otherwise
+    "/textures/environmentMaps/underpass/px.png",
+    "/textures/environmentMaps/underpass/nx.png",
+    "/textures/environmentMaps/underpass/py.png",
+    "/textures/environmentMaps/underpass/ny.png",
+    "/textures/environmentMaps/underpass/pz.png",
+    "/textures/environmentMaps/underpass/nz.png",
+  ]);
+
+  scene.background = environmentMap;
+
   // ------ LIGHTS ---------------------------------------------------
   // -----------------------------------------------------------------
   // -----------------------------------------------------------------
@@ -50,10 +88,15 @@ if (canvas) {
   // ---------------------------- setup-------------------------------
   // -----------------------------------------------------------------
   const torusKnot = new THREE.Mesh(
-    new THREE.TorusKnotGeometry(1, 0.4),
-    new THREE.MeshBasicMaterial({ color: "white" })
+    new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
+    new THREE.MeshStandardMaterial({
+      roughness: 0.3,
+      metalness: 1,
+      color: 0xaaaaaa,
+    })
   );
-
+  torusKnot.position.x = -4;
+  torusKnot.position.y = 4;
   scene.add(torusKnot);
 
   // -----------------------------------------------------------------

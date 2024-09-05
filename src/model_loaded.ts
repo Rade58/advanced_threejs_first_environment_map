@@ -32,6 +32,16 @@ const canvas: HTMLCanvasElement | null = document.querySelector("canvas.webgl");
 if (canvas) {
   const scene = new THREE.Scene();
 
+  const gltfLoader = new GLTFLoader();
+
+  gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
+    console.log("model loaded");
+    console.log({ gltf });
+    gltf.scene.scale.setScalar(10);
+
+    scene.add(gltf.scene);
+  });
+
   // ------ LIGHTS ---------------------------------------------------
   // -----------------------------------------------------------------
   // -----------------------------------------------------------------
@@ -53,7 +63,7 @@ if (canvas) {
     new THREE.TorusKnotGeometry(1, 0.4),
     new THREE.MeshBasicMaterial({ color: "white" })
   );
-
+  torusKnot.position.x = -6;
   scene.add(torusKnot);
 
   // -----------------------------------------------------------------
