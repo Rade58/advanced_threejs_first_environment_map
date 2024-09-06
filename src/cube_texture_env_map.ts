@@ -1,9 +1,14 @@
 import * as THREE from "three";
-import { OrbitControls, GLTFLoader } from "three/examples/jsm/Addons.js";
-//
+
 import GUI from "lil-gui";
-// import gsap from "gsap";
-// import CANNON from "cannon";
+import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { GLTFLoader } from "three/examples/jsm/Addons.js";
+
+// for this exercise make sure that you don't have any lights
+// because source of light is going to be an eninvironmentMap
+// we are loading
+// but if you add new mesh. meke sure that his material
+// is a material that needs light, like MeshNormalMaterial
 
 // we download environmentMap from https://polyhaven.com/   in hdr format
 // and we use this tool to get png we can attach to cube walls
@@ -14,11 +19,13 @@ import GUI from "lil-gui";
 // we will then use environment map to light up our torus mesh
 // we do this by applying environment map onto material
 // this is only a solution if we want to do this for single material of single mesh
+//   ourMesh.material.envMap = environmentMap
+// but we want use it like that
 
-// but since we want to apply env map on every mterial of our scene
+// since we want to apply env map on every mterial of our scene
 // we can use scene.environment = environmentMap
-// you will see reflection in the helmet glasses after this
 
+// ------------ gui -------------------
 /**
  * @description Debug UI - lil-ui
  */
@@ -28,74 +35,115 @@ const gui = new GUI({
   closeFolders: false,
 });
 
-// gui.hide();
-// gui parameters
+/**
+ * @description gui parmeters
+ */
 const parameters = {
-  // floorMaterialColor: "#89898b",
+  //
+  "rotate model": 0,
 };
+// gui.hide()
+// ----------------------------------
 
+//------------ canvas settings -----------
+/**
+ * @description canvas settings
+ */
 const sizes = {
-  // width: 800,
   width: window.innerWidth,
-  // height: 600,
   height: window.innerHeight,
 };
+// ----------------------------------------
 
 const canvas: HTMLCanvasElement | null = document.querySelector("canvas.webgl");
 
 if (canvas) {
-  const scene = new THREE.Scene();
+  // ---- loaders -------
+  /**
+   * @description loaders
+   */
 
   const gltfLoader = new GLTFLoader();
+  const cubeTextureLoader = new THREE.CubeTextureLoader();
 
+  // ------- Scene and camera
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    sizes.width / sizes.height,
+    0.1,
+    100
+  );
+  camera.position.set(4, 1, -4);
+  scene.add(camera);
+
+  //------------------------------------------------
+  //------------------------------------------------
+  //------------------------------------------------
+  //------------------------------------------------
+  // ----------    ENVIRONMENT MAP
+  const environmentMap = cubeTextureLoader.load(
+    [
+      "/textures/environmentMaps/underpass/px.png",
+      "/textures/environmentMaps/underpass/nx.png",
+      "/textures/environmentMaps/underpass/py.png",
+      "/textures/environmentMaps/underpass/ny.png",
+      "/textures/environmentMaps/underpass/pz.png",
+      "/textures/environmentMaps/underpass/nz.png",
+    ],
+    () => {
+      console.log("environment map loaded");
+    },
+    () => {
+      console.log("environment map progress");
+    },
+    (err) => {
+      console.log("environment map loading error");
+      console.error(err);
+    }
+  );
+
+  scene.background = environmentMap;
+  /** to apply envMap to all objects/material */
+  scene.environment = environmentMap;
+
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // -----------------   MODEL
   gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
     console.log("model loaded");
-    console.log({ gltf });
     gltf.scene.scale.setScalar(10);
+    gltf.scene.position.y = -4;
+    // gltf.scene.rotation.y = Math.PI / 2; // 180deg
+
+    gui
+      .add(parameters, "rotate model")
+      .onChange((a: number) => {
+        gltf.scene.rotation.y = Math.PI * a;
+      })
+      .min(0)
+      .max(2);
 
     scene.add(gltf.scene);
   });
 
-  // cube textures
+  // -------- Controls nd helpers
 
-  const cubeTextureLoader = new THREE.CubeTextureLoader();
+  const orbit_controls = new OrbitControls(camera, canvas);
+  orbit_controls.enableDamping = true;
 
-  /**
-   * Environment Map
-   */
-  // LDR cube texture
-  const environmentMap = cubeTextureLoader.load([
-    // follow this exact order, because it's not going to work otherwise
-    "/textures/environmentMaps/alley/px.png",
-    "/textures/environmentMaps/alley/nx.png",
-    "/textures/environmentMaps/alley/py.png",
-    "/textures/environmentMaps/alley/ny.png",
-    "/textures/environmentMaps/alley/pz.png",
-    "/textures/environmentMaps/alley/nz.png",
-  ]);
-
-  scene.background = environmentMap;
-  scene.environment = environmentMap;
-
-  // ------ LIGHTS ---------------------------------------------------
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
-
-  /**
-   * Lights
-   */
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambientLight);
-
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(7, 9, -7);
-  scene.add(directionalLight);
-
-  // ---------------------------- setup-------------------------------
-  // -----------------------------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // Meshes, Geometries, Materials
+  // ----------------------------------------------
+  // ----------------------------------------------
   const torusKnot = new THREE.Mesh(
     new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
+    // new THREE.MeshBasicMaterial({ color: "white" })
     new THREE.MeshStandardMaterial({
       roughness: 0.3,
       metalness: 1,
@@ -103,7 +151,6 @@ if (canvas) {
     })
   );
   torusKnot.position.x = -4;
-  torusKnot.position.y = 4;
 
   // applying environment map onto material of our torusknot mesh
   // we already used scene.environment = environmentMap   so we don't need this
@@ -111,159 +158,30 @@ if (canvas) {
 
   scene.add(torusKnot);
 
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
 
-  //  GUI
-
-  /* gui.addColor(parameters, "floorMaterialColor").onChange(() => {
-    floorMaterial.color.set(parameters.floorMaterialColor);
-  }); */
-
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
-
-  // we don't need this, it is from previous group of lessons to show how we can move group
-  // instead of camera
-  // I kept this for no reason
-  const cameraGroup = new THREE.Group();
-  scene.add(cameraGroup);
-
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    sizes.width / sizes.height,
-
-    0.1,
-    100
-  );
-
-  camera.position.z = 8;
-  camera.position.x = 4;
-  camera.position.y = 4;
-
-  cameraGroup.add(camera);
-  // scene.add(camera);
-
-  // ------ HELPERS ----------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
-  const axHelp = new THREE.AxesHelper(4);
-  axHelp.setColors("red", "green", "blue");
-  scene.add(axHelp);
-
-  const directionalLightCameraHelper = new THREE.CameraHelper(
-    directionalLight.shadow.camera
-  );
-  scene.add(directionalLightCameraHelper);
-
-  axHelp.visible = false;
-  directionalLightCameraHelper.visible = false;
-
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
-  // orbit controls
-  const orbit_controls = new OrbitControls(camera, canvas);
-  // orbit_controls.enabled = false
-  orbit_controls.enableDamping = true;
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
+  // -------------- RENDERER
+  // ----------------------------------
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    alpha: true,
+    //To make the edges of the objects more smooth
+    antialias: true,
+    // alpha: true,
   });
 
-  // for shadows to work
-  // ------ ACTIVATE SHADOW MAP ------
-  //--------------------------------------------------
-  renderer.shadowMap.enabled = true;
-  // shadow algos
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  //--------------------------------------------------
-  //--------------------------------------------------
-
-  // handle pixel ratio
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(sizes.width, sizes.height);
-  renderer.render(scene, camera);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // maybe this should be only inside       tick
 
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // toggle debug ui on key `h`
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "h") {
-      gui.show(gui._hidden);
-    }
-  });
-
-  // --------------------------------------------------
-  // --------------------------------------------------
-
-  // ON mousemove HANDLER
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
   /**
-   *  Mousemove
+   * Event Listeners
    */
-  const mouse = new THREE.Vector2();
-  window.addEventListener("mousemove", (_event) => {
-    mouse.x = (_event.clientX / sizes.width) * 2 - 1;
-    mouse.y = -(_event.clientY / sizes.height) * 2 + 1;
 
-    // console.log({ mouse });
-  });
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-
-  // --------------------------------------------------
-
-  //
-
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // ------------- Animation loop ------------------
-  const clock = new THREE.Clock();
-
-  const tick = () => {
-    //
-    const elapsedTime = clock.getElapsedTime();
-
-    // const objectsToIntersect = [object1, object2, object3];
-
-    // from previous example
-
-    // for dumping to work
-    orbit_controls.update();
-
-    renderer.render(scene, camera);
-
-    window.requestAnimationFrame(tick);
-  };
-
-  tick();
-
-  // ------------------------------------------------------
-  // --------------- handle resize ------------------------
   window.addEventListener("resize", (e) => {
     console.log("resizing");
     sizes.width = window.innerWidth;
@@ -274,8 +192,19 @@ if (canvas) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 
-  // ------------------------------------------------------
-  // ----------------- enter fulll screen with double click
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "h") {
+      gui.show(gui._hidden);
+    }
+  });
+
+  const mouse = new THREE.Vector2();
+  window.addEventListener("mousemove", (_event) => {
+    mouse.x = (_event.clientX / sizes.width) * 2 - 1;
+    mouse.y = -(_event.clientY / sizes.height) * 2 + 1;
+
+    // console.log({ mouse });
+  });
 
   /* window.addEventListener("dblclick", () => {
     console.log("double click");
@@ -309,4 +238,24 @@ if (canvas) {
       }
     }
   }); */
+
+  // ---------------------- TICK -----------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+
+  const clock = new THREE.Clock();
+
+  /**
+   * @description tick
+   */
+  function tick() {
+    // for dumping to work
+    orbit_controls.update();
+
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(tick);
+  }
+
+  tick();
 }

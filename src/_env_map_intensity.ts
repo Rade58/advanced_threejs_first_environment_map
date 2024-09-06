@@ -5,6 +5,14 @@ import GUI from "lil-gui";
 // import gsap from "gsap";
 // import CANNON from "cannon";
 
+// we want to change intensity of environment map
+// in this case we need to "traverse" over every material and change intensity
+// we use traverse method from THRE.Object3D.prototype
+// we will create function to do this (updateAllMaterials)
+
+// we will aalso define with dat.gui the changing of envMapIntesity of our torus mesh material
+// but also material of every mesh of our model
+
 /**
  * @description Debug UI - lil-ui
  */
@@ -34,40 +42,119 @@ if (canvas) {
 
   const gltfLoader = new GLTFLoader();
 
+  /**
+   * UPDATE ALL MATERIALS
+   *
+   */
+  function updateAllMaterials() {
+    // console.log("Traverse the scene and update all materials here");
+
+    scene.traverse((child) => {
+      // this also covers grandchildren
+      // console.log({ child }); // every Object3D including camera...
+      // we want to apply change of env map intensity only on Meshes that have
+      // mesh standard material
+      if (child instanceof THREE.Mesh) {
+        // if (
+        //   child.isMesh &&
+        //   child.material.isMeshStandardMaterial
+        // ) {
+        //
+        if (child.material instanceof THREE.MeshStandardMaterial) {
+          console.log({ child });
+          // child.material.envMapIntensity = 10;
+          // child.material.envMapIntensity = 3;
+          // }
+          // if (child.geometry instanceof THREE.TorusKnotGeometry) {
+          console.log("torus knot");
+          console.log(child.material.envMapIntensity);
+          gui
+            .add(child.material, "envMapIntensity")
+            .min(0)
+            .max(10)
+            .name("envMapIntensity for Torus Knot")
+            .onChange((a: number) => {
+              console.log({ a });
+              (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+              child.castShadow = true;
+              child.receiveShadow = true;
+            });
+          // }
+        }
+      }
+    });
+  }
+
   gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
     console.log("model loaded");
-    console.log({ gltf });
+    // console.log({ gltf });
     gltf.scene.scale.setScalar(10);
 
     scene.add(gltf.scene);
+    // make sure you execute this after adding model to the scene
+    updateAllMaterials();
   });
+
+  // cube textures
+
+  const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+  /**
+   * Environment Map
+   */
+  // LDR cube texture
+  const environmentMap = cubeTextureLoader.load([
+    // follow this exact order, because it's not going to work otherwise
+    "/textures/environmentMaps/alley/px.png",
+    "/textures/environmentMaps/alley/nx.png",
+    "/textures/environmentMaps/alley/py.png",
+    "/textures/environmentMaps/alley/ny.png",
+    "/textures/environmentMaps/alley/pz.png",
+    "/textures/environmentMaps/alley/nz.png",
+  ]);
+
+  scene.background = environmentMap;
+  scene.environment = environmentMap;
 
   // ------ LIGHTS ---------------------------------------------------
   // -----------------------------------------------------------------
   // -----------------------------------------------------------------
   // -----------------------------------------------------------------
 
+  /* const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(ambientLight); */
   /**
    * Lights
    */
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambientLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
   directionalLight.position.set(7, 9, -7);
+  directionalLight.castShadow = true;
   scene.add(directionalLight);
 
   // ---------------------------- setup-------------------------------
   // -----------------------------------------------------------------
   const torusKnot = new THREE.Mesh(
-    new THREE.TorusKnotGeometry(1, 0.4),
-    new THREE.MeshBasicMaterial({ color: "white" })
+    new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
+    new THREE.MeshStandardMaterial({
+      roughness: 0.3,
+      metalness: 1,
+      color: 0xaaaaaa,
+    })
   );
-  torusKnot.position.x = -6;
+  torusKnot.position.x = -4;
+  torusKnot.position.y = 4;
+
+  // applying environment map onto material of our torusknot mesh
+  // we already used scene.environment = environmentMap   so we don't need this
+  // torusKnot.material.envMap = environmentMap;
+
   scene.add(torusKnot);
 
   // -----------------------------------------------------------------
   // -----------------------------------------------------------------
+
+  // update all materials
 
   //  GUI
 
@@ -109,13 +196,7 @@ if (canvas) {
   axHelp.setColors("red", "green", "blue");
   scene.add(axHelp);
 
-  const directionalLightCameraHelper = new THREE.CameraHelper(
-    directionalLight.shadow.camera
-  );
-  scene.add(directionalLightCameraHelper);
-
   axHelp.visible = false;
-  directionalLightCameraHelper.visible = false;
 
   // -------------------------------------------------
   // -------------------------------------------------
@@ -135,16 +216,6 @@ if (canvas) {
     canvas,
     alpha: true,
   });
-
-  // for shadows to work
-  // ------ ACTIVATE SHADOW MAP ------
-  //--------------------------------------------------
-  renderer.shadowMap.enabled = true;
-  // shadow algos
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  //--------------------------------------------------
-  //--------------------------------------------------
 
   // handle pixel ratio
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

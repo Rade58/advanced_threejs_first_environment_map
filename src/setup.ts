@@ -1,10 +1,9 @@
 import * as THREE from "three";
-import { OrbitControls, GLTFLoader } from "three/examples/jsm/Addons.js";
-//
-import GUI from "lil-gui";
-// import gsap from "gsap";
-// import CANNON from "cannon";
 
+import GUI from "lil-gui";
+import { OrbitControls } from "three/examples/jsm/Addons.js";
+
+// ------------ gui -------------------
 /**
  * @description Debug UI - lil-ui
  */
@@ -14,201 +13,82 @@ const gui = new GUI({
   closeFolders: false,
 });
 
-// gui.hide();
-// gui parameters
+/**
+ * @description gui parmeters
+ */
 const parameters = {
-  // floorMaterialColor: "#89898b",
+  //
 };
+// gui.hide()
+// ----------------------------------
 
+//------------ canvas settings -----------
+/**
+ * @description canvas settings
+ */
 const sizes = {
-  // width: 800,
   width: window.innerWidth,
-  // height: 600,
   height: window.innerHeight,
 };
+// ----------------------------------------
 
 const canvas: HTMLCanvasElement | null = document.querySelector("canvas.webgl");
 
 if (canvas) {
+  // ------- Scene and camera
+
   const scene = new THREE.Scene();
 
-  // ------ LIGHTS ---------------------------------------------------
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    sizes.width / sizes.height,
+    0.1,
+    100
+  );
+  camera.position.set(4, 1, -4);
+  scene.add(camera);
 
-  /**
-   * Lights
-   */
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambientLight);
+  // -------- Controls nd helpers
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(7, 9, -7);
-  scene.add(directionalLight);
+  const orbit_controls = new OrbitControls(camera, canvas);
+  orbit_controls.enableDamping = true;
 
-  // ---------------------------- setup-------------------------------
-  // -----------------------------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // Meshes, Geometries, Materials
+  // ----------------------------------------------
+  // ----------------------------------------------
   const torusKnot = new THREE.Mesh(
-    new THREE.TorusKnotGeometry(1, 0.4),
+    new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
     new THREE.MeshBasicMaterial({ color: "white" })
   );
 
   scene.add(torusKnot);
 
-  // -----------------------------------------------------------------
-  // -----------------------------------------------------------------
+  // ----------------------------------------------
+  // ----------------------------------------------
 
-  //  GUI
-
-  /* gui.addColor(parameters, "floorMaterialColor").onChange(() => {
-    floorMaterial.color.set(parameters.floorMaterialColor);
-  }); */
-
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
-  // -----------------------------------------------------------------------
-
-  // we don't need this, it is from previous group of lessons to show how we can move group
-  // instead of camera
-  // I kept this for no reason
-  const cameraGroup = new THREE.Group();
-  scene.add(cameraGroup);
-
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    sizes.width / sizes.height,
-
-    0.1,
-    100
-  );
-
-  camera.position.z = 8;
-  camera.position.x = 4;
-  camera.position.y = 4;
-
-  cameraGroup.add(camera);
-  // scene.add(camera);
-
-  // ------ HELPERS ----------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
-  const axHelp = new THREE.AxesHelper(4);
-  axHelp.setColors("red", "green", "blue");
-  scene.add(axHelp);
-
-  const directionalLightCameraHelper = new THREE.CameraHelper(
-    directionalLight.shadow.camera
-  );
-  scene.add(directionalLightCameraHelper);
-
-  axHelp.visible = false;
-  directionalLightCameraHelper.visible = false;
-
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
-  // orbit controls
-  const orbit_controls = new OrbitControls(camera, canvas);
-  // orbit_controls.enabled = false
-  orbit_controls.enableDamping = true;
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-
+  // -------------- RENDERER
+  // ----------------------------------
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    alpha: true,
+    //To make the edges of the objects more smooth
+    antialias: true,
+    // alpha: true,
   });
 
-  // for shadows to work
-  // ------ ACTIVATE SHADOW MAP ------
-  //--------------------------------------------------
-  renderer.shadowMap.enabled = true;
-  // shadow algos
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  //--------------------------------------------------
-  //--------------------------------------------------
-
-  // handle pixel ratio
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(sizes.width, sizes.height);
-  renderer.render(scene, camera);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // maybe this should be only inside       tick
 
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // -------------------------------------------------
-  // toggle debug ui on key `h`
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "h") {
-      gui.show(gui._hidden);
-    }
-  });
-
-  // --------------------------------------------------
-  // --------------------------------------------------
-
-  // ON mousemove HANDLER
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
   /**
-   *  Mousemove
+   * Event Listeners
    */
-  const mouse = new THREE.Vector2();
-  window.addEventListener("mousemove", (_event) => {
-    mouse.x = (_event.clientX / sizes.width) * 2 - 1;
-    mouse.y = -(_event.clientY / sizes.height) * 2 + 1;
 
-    // console.log({ mouse });
-  });
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-  // -------------------------------------------------------
-
-  // --------------------------------------------------
-
-  //
-
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // -----------------------------------------------
-  // ------------- Animation loop ------------------
-  const clock = new THREE.Clock();
-
-  const tick = () => {
-    //
-    const elapsedTime = clock.getElapsedTime();
-
-    // const objectsToIntersect = [object1, object2, object3];
-
-    // from previous example
-
-    // for dumping to work
-    orbit_controls.update();
-
-    renderer.render(scene, camera);
-
-    window.requestAnimationFrame(tick);
-  };
-
-  tick();
-
-  // ------------------------------------------------------
-  // --------------- handle resize ------------------------
   window.addEventListener("resize", (e) => {
     console.log("resizing");
     sizes.width = window.innerWidth;
@@ -219,8 +99,19 @@ if (canvas) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 
-  // ------------------------------------------------------
-  // ----------------- enter fulll screen with double click
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "h") {
+      gui.show(gui._hidden);
+    }
+  });
+
+  const mouse = new THREE.Vector2();
+  window.addEventListener("mousemove", (_event) => {
+    mouse.x = (_event.clientX / sizes.width) * 2 - 1;
+    mouse.y = -(_event.clientY / sizes.height) * 2 + 1;
+
+    // console.log({ mouse });
+  });
 
   /* window.addEventListener("dblclick", () => {
     console.log("double click");
@@ -254,4 +145,24 @@ if (canvas) {
       }
     }
   }); */
+
+  // ---------------------- TICK -----------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+
+  const clock = new THREE.Clock();
+
+  /**
+   * @description tick
+   */
+  function tick() {
+    // for dumping to work
+    orbit_controls.update();
+
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(tick);
+  }
+
+  tick();
 }
