@@ -4,6 +4,13 @@ import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
+// I had problem with changing environmentMapIntensity
+// when environment map is set to reflect
+// to all of our materials by using
+// scene.environment = environmentMap;
+// so instead we will set
+// individualMesh,material,envMap = environmentMap
+
 // we want to change intensity of environment map for every material
 // of every mesh
 // in this case we need to "traverse" over every material and change intensity
@@ -35,8 +42,8 @@ const parameters = {
   //
   "rotate model": 0,
   // default is 1 I think
-  "envMapIntensity for every material of model": 1,
-  "envMapIntensity for torusKnotMaterial": 1,
+  "envMapIntensity for every material of model": 5,
+  "envMapIntensity for material of torusKnot": 5,
 };
 // gui.hide()
 // ----------------------------------
@@ -65,12 +72,53 @@ if (canvas) {
   // ------- Scene
   const scene = new THREE.Scene();
 
+  function setEnvironmentMapForMaterialsOfModel() {
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        if (
+          child.material instanceof THREE.MeshStandardMaterial &&
+          !(child.geometry instanceof THREE.TorusKnotGeometry)
+        ) {
+          child.material.envMap = environmentMap;
+        }
+      }
+    });
+  }
+
+  gui
+    .add(parameters, "envMapIntensity for every material of model")
+    .min(1)
+    .max(10)
+    .step(0.001)
+    .onChange(updateAllMaterials);
+
+  // we are using this method as
+  // onChange as you already saw
   /**
    * @description Update All Materials
    */
   function updateAllMaterials() {
     scene.traverse((child) => {
-      console.log({ child });
+      if (child instanceof THREE.Mesh) {
+        // console.log({ child });
+
+        // I could but I won't do anything in here
+        // that is related to TorusKnow
+        // We would include everything in production
+        // but I won't do this here
+        // because for torus knot I want to do everything separetly
+        if (
+          child.material instanceof THREE.MeshStandardMaterial &&
+          !(child.geometry instanceof THREE.TorusKnotGeometry)
+        ) {
+          // we can now define setting intensity with
+          // gui
+
+          child.material.envMapIntensity =
+            parameters["envMapIntensity for every material of model"];
+          child.material.needsUpdate = true;
+        }
+      }
     });
   }
 
@@ -113,8 +161,12 @@ if (canvas) {
   );
 
   scene.background = environmentMap;
-  /** to apply envMap to all objects/material */
-  scene.environment = environmentMap;
+  // if we do it like this
+  // scene.environment = environmentMap;
+  // for some reason we can't change environmentMapIntensity
+  // with mentioned setting
+  // so we used   individualMesh.material.envMap = environmentMap
+  // after this changing on environmentMapIntensity worked
 
   // ----------------------------------------------
   // ----------------------------------------------
@@ -132,12 +184,19 @@ if (canvas) {
   );
   torusKnot.position.x = -4;
 
+  // instead of single material
+  // torusKnot.material.envMap = environmentMap;
+  // we setted for all materials, after we load our model
+  // scene.environment = environmentMap;
+  // but that didn't work so we defined it like this this
+  torusKnot.material.envMap = environmentMap;
   //
   // we want to change environmentMapIntensity for torus know
   // to see change we want to do it with lil gui
 
+  scene.add(torusKnot);
   gui
-    .add(parameters, "envMapIntensity for torusKnotMaterial")
+    .add(parameters, "envMapIntensity for material of torusKnot")
     .min(1)
     .max(10)
     .step(0.001)
@@ -146,9 +205,9 @@ if (canvas) {
 
       torusKnot.material.envMapIntensity = val;
       torusKnot.material.needsUpdate = true;
-    });
 
-  scene.add(torusKnot);
+      // renderer.render(scene, camera); // don't need to do this
+    });
 
   // ----------------------------------------------
   // ----------------------------------------------
@@ -159,7 +218,6 @@ if (canvas) {
     console.log("model loaded");
     gltf.scene.scale.setScalar(10);
     gltf.scene.position.y = -4;
-    // gltf.scene.rotation.y = Math.PI / 2; // 180deg
 
     gui
       .add(parameters, "rotate model")
@@ -171,11 +229,10 @@ if (canvas) {
 
     scene.add(gltf.scene);
 
-    // make sure you execute this after adding model to the scene
-    updateAllMaterials();
+    setEnvironmentMapForMaterialsOfModel();
   });
 
-  // -------- Controls nd helpers
+  // -------- Controls and helpers
 
   const orbit_controls = new OrbitControls(camera, canvas);
   orbit_controls.enableDamping = true;
