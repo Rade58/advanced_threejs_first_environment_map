@@ -6,10 +6,10 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 // I had problem with changing environmentMapIntensity
 // when environment map is set to reflect
-// to all of our materials by using
+// to all of our materials at once by using
 // scene.environment = environmentMap;
 // so instead we will set
-// individualMesh,material,envMap = environmentMap
+// individualMesh.material.envMap = environmentMap
 
 // we want to change intensity of environment map for every material
 // of every mesh
