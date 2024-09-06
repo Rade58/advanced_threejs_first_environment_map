@@ -72,20 +72,6 @@ if (canvas) {
 
   const rgbeLoader = new RGBELoader();
 
-  rgbeLoader.load(
-    "/textures/environmentMaps/underpass/2k.hdr",
-    (hdri) => {
-      console.log({ hdri });
-    },
-    () => {
-      console.log("loading hdri progressing");
-    },
-    (err) => {
-      console.log("HDRI not loaded");
-      console.error(err);
-    }
-  );
-
   // ------- Scene
   const scene = new THREE.Scene();
 
@@ -111,14 +97,16 @@ if (canvas) {
 
   //
 
-  function setEnvironmentMapForMaterialsOfModel() {
+  // I revorked this function so I can
+  // set envMap for materials of meshes that are part of model
+  function setEnvironmentMapForMaterialsOfModel(envMap: THREE.DataTexture) {
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (
           child.material instanceof THREE.MeshStandardMaterial &&
           !(child.geometry instanceof THREE.TorusKnotGeometry)
         ) {
-          child.material.envMap = environmentMap;
+          child.material.envMap = envMap;
           child.material.envMapIntensity =
             parameters["envMapIntensity for every material of model"];
         }
@@ -164,15 +152,91 @@ if (canvas) {
   camera.position.set(4, 1, -4);
   scene.add(camera);
 
+  // ----------------------------------------------
+  // ----------------------------------------------
+  // Meshes, Geometries, Materials
+  // ----------------------------------------------
+  // ----------------------------------------------
+
+  const torusKnot = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
+    // new THREE.MeshBasicMaterial({ color: "white" })
+    new THREE.MeshStandardMaterial({
+      roughness: 0.3,
+      metalness: 1,
+      color: 0xaaaaaa,
+    })
+  );
+
+  torusKnot.position.x = -4;
+  // comment this out
+  // torusKnot.material.envMap = environmentMap;
+  //
+
+  torusKnot.material.envMapIntensity =
+    parameters["envMapIntensity for material of torusKnot"];
+  torusKnot.material.needsUpdate = true;
+
+  //
+  scene.add(torusKnot);
+
   //------------------------------------------------
   //------------------------------------------------
   //------------------------------------------------
   //------------------------------------------------
   // ----------    ENVIRONMENT MAP
 
-  // rgbeLoader.load()
+  // we write this
 
-  const environmentMap = cubeTextureLoader.load(
+  /**
+   * @description HDR (RGBE) equirectangular
+   */
+  rgbeLoader.load(
+    "/textures/environmentMaps/underpass/2k.hdr",
+    (environmentMap) => {
+      // this is DataTexture instance
+      console.log({ environmentMap });
+
+      environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+
+      scene.background = environmentMap;
+      // this works but we can't
+      // change envMapIntensity for some reason
+      // scene.environment = environmentMap;
+      // so I use this
+      torusKnot.material.envMap = environmentMap;
+
+      gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
+        console.log("model loaded");
+        gltf.scene.scale.setScalar(10);
+        gltf.scene.position.y = -4;
+
+        gui
+          .add(parameters, "rotate model")
+          .onChange((a: number) => {
+            gltf.scene.rotation.y = Math.PI * a;
+          })
+          .min(0)
+          .max(2);
+
+        scene.add(gltf.scene);
+
+        setEnvironmentMapForMaterialsOfModel(environmentMap);
+      });
+    },
+    () => {
+      console.log("loading hdri progressing");
+    },
+    (err) => {
+      console.log("HDRI not loaded");
+      console.error(err);
+    }
+  );
+
+  // insted of this
+
+  // This was CubeTexture instance
+  /* const environmentMap = cubeTextureLoader.load(
     [
       "/textures/environmentMaps/underpass/px.png",
       "/textures/environmentMaps/underpass/nx.png",
@@ -193,33 +257,8 @@ if (canvas) {
     }
   );
 
-  scene.background = environmentMap;
-  // ----------------------------------------------
-  // ----------------------------------------------
-  // Meshes, Geometries, Materials
-  // ----------------------------------------------
-  // ----------------------------------------------
+  scene.background = environmentMap; */
 
-  const torusKnot = new THREE.Mesh(
-    new THREE.TorusKnotGeometry(1, 0.4, 100, 16),
-    // new THREE.MeshBasicMaterial({ color: "white" })
-    new THREE.MeshStandardMaterial({
-      roughness: 0.3,
-      metalness: 1,
-      color: 0xaaaaaa,
-    })
-  );
-
-  torusKnot.position.x = -4;
-  torusKnot.material.envMap = environmentMap;
-  //
-
-  torusKnot.material.envMapIntensity =
-    parameters["envMapIntensity for material of torusKnot"];
-  torusKnot.material.needsUpdate = true;
-
-  //
-  scene.add(torusKnot);
   gui
     .add(parameters, "envMapIntensity for material of torusKnot")
     .min(1)
@@ -239,7 +278,10 @@ if (canvas) {
   // ----------------------------------------------
   // ----------------------------------------------
   // -----------------   MODELs
-  gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
+  // I moved this code inside onLoad handrer
+  // for hdri env map loading
+  // I moved this
+  /* gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
     console.log("model loaded");
     gltf.scene.scale.setScalar(10);
     gltf.scene.position.y = -4;
@@ -253,9 +295,7 @@ if (canvas) {
       .max(2);
 
     scene.add(gltf.scene);
-
-    setEnvironmentMapForMaterialsOfModel();
-  });
+  }); */
 
   // -------- Controls and helpers
 
