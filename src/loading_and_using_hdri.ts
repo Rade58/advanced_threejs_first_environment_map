@@ -22,6 +22,14 @@ import { GLTFLoader, RGBELoader } from "three/examples/jsm/Addons.js";
 
 // we need RGBELoader to load hdr file
 
+// the rest I explained in code, bellow
+
+// everything will look better after we apply this
+
+// DOWNSIDE:
+// downside of this approach is usully much heavier time to load
+// You can mitigate with a lower resolution and blurred background
+
 // ------------ gui -------------------
 /**
  * @description Debug UI - lil-ui
@@ -195,9 +203,12 @@ if (canvas) {
     "/textures/environmentMaps/underpass/2k.hdr",
     (environmentMap) => {
       // this is DataTexture instance
-      console.log({ environmentMap });
-
+      // console.log({ environmentMap });
+      // without this
       environmentMap.mapping = THREE.EquirectangularReflectionMapping;
+      // environment map wouldn't be applied like it should
+      // you would see just "panormaic" image without
+      // any stretching
 
       scene.background = environmentMap;
       // this works but we can't
