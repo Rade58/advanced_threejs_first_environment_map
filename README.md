@@ -133,7 +133,6 @@ if you want to change that we can selet lights, click on lightbulb property and
 
 `Object properties ` -> `visibility` -> `Ray visibility` -> unselect camera if you want, **but better don't**, let's leave it like it is which means camera will see the lights
 
-
 Save it with fn + f12 like we did it before
 
 when it renders after some time save it with alt + s
