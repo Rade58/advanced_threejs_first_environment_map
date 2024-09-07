@@ -18,6 +18,6 @@ Sign up select SkyboxAI and you can write propmpt in there
 
 But downloads are available only with paid subscription
 
-You will get jpeg file and you can load it with TextureLoader
+you would aso use something like `environmentMaap.colorSpace = THREE.SRGBColorSpace`
 
-you would aso use something like `environmentMaap.colorSpace = THREE.SRGBColorSpace`and you would use equirectangular maping we already show
+you cn also increase envMapIntensity, it will look better
