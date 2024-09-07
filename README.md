@@ -10,6 +10,10 @@ Env map can be used as
 
 before we start I just want to say that I also learned how to [generate environment by using AI tools](/README_AI.md) (this is second part of the lesson)
 
+## Also I didn't complete last lesson of this course
+
+**example with "tube"**
+
 now let's continue
 
 ## Delete every object we had in blender
