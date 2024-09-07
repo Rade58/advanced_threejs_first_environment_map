@@ -126,10 +126,9 @@ all lights set to 1000W, but I think it is already defined from earlier (click o
 
 Again make sure that you defined 256 for `max samples` in render(property) -> render
 
-All of our lights will be visible to the camera
+All of our lights will be visible to the camera (***but we can change that in our threejs scene by removing `scene.backgtound = environmentMap`**)
 
 if you want to change that we can selet lights, click on lightbulb property and 
-
 
 `Object properties ` -> `visibility` -> `Ray visibility` -> unselect camera if you want, **but better don't**, let's leave it like it is which means camera will see the lights
 

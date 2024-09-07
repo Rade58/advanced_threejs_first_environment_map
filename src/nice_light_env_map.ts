@@ -6,6 +6,14 @@ import { GLTFLoader, RGBELoader } from "three/examples/jsm/Addons.js";
 
 // I MADE ENVIRONMENT MAP IN BLENDER THAT CONSISTS FROM THREE LIGHTS
 
+// you (our camera) will see the lights since they are visible
+
+// if you want to make lights invisible
+// remove `scene.bacground = environmentMap`
+//
+
+// it looks very good
+
 // ------------ gui -------------------
 /**
  * @description Debug UI - lil-ui
@@ -175,7 +183,8 @@ if (canvas) {
     (environmentMap) => {
       environmentMap.mapping = THREE.EquirectangularReflectionMapping;
 
-      scene.background = environmentMap;
+      // we are removing this
+      // scene.background = environmentMap;
 
       torusKnot.material.envMap = environmentMap;
 
