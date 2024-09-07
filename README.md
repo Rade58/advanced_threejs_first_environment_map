@@ -106,3 +106,36 @@ After it renders Press `Alt` + `S`
 - Name it as `blender-2k.hdr`
 - Set file format to be `Radiance HDR`
 - Savi it somewhere in our static texture folder in `environment/map` folder for our project
+
+# Creating studio setup
+
+- Remove all objects, just keep camera and light we already set
+
+- we will duplicate the light, we want two more (select the light and Shift + D)
+
+- one light place at the floor to look towards the center
+- one should look from bellow
+- one should look from above
+- when you are looking from above, make them equally placed to eachother if you know what I mean
+
+all lights set to 1000W, but I think it is already defined from earlier (click on lighbulb icon on properties section)
+
+- lights that looks from above change color to white
+- the one that looks horyzontaly to center change to redish (orange red maybe)
+- one looking from bellow, change color to some blue nuance
+
+Again make sure that you defined 256 for `max samples` in render(property) -> render
+
+All of our lights will be visible to the camera
+
+if you want to change that we can selet lights, click on lightbulb property and 
+
+
+`Object properties ` -> `visibility` -> `Ray visibility` -> unselect camera if you want, **but better don't**, let's leave it like it is which means camera will see the lights
+
+
+Save it with fn + f12 like we did it before
+
+when it renders after some time save it with alt + s
+
+you pick format `radiance HDR`
