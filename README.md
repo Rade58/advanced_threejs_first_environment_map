@@ -8,7 +8,7 @@ Env map can be used as
 
 ## After dealing with environment map inside threejs we also learned of `HOW TO GENERATE ENVIRONMENT MAP BY USING BLENDER`
 
-before we start I just want to say that I also learned how to [generate environment by using NVIDIA Canvas](/README_AI.md) (this is second part of the lesson)
+before we start I just want to say that I also learned how to [generate environment by using AI tools](/README_AI.md) (this is second part of the lesson)
 
 now let's continue
 
