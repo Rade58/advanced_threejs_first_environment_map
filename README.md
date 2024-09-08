@@ -26,8 +26,8 @@ I removed the cube and the point light I always have when I open blender
 
 Change the rendering engine from `EEVEE` to `Cycles`
 
-Open `Reder` 
-Ma Samples
+Open `Render` 
+Na Samples
     - Lower it from 4024 to 256
 
 ### In World properties
